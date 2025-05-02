@@ -20,7 +20,7 @@ Optional fields:
 * nearbyAirports	If set to true, the search will include airports near the specified origin airport. Only origin-side nearby * airport support is available; nearby airports for the destination are not supported at this time. Defaults to false
 * cabinClass	Class of travel to search for
 
-## Resultado completo pero mas lento
+## /poll : Resultado completo pero mas lento
 POST https://partners.api.skyscanner.net/apiservices/v3/flights/live/search/poll/{sessionToken}
 
 * Status	Indicates status of the search request is running or completed
