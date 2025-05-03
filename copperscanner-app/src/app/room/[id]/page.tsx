@@ -71,6 +71,8 @@ export default function RoomPage() {
           console.log("Connected to socket server with ID:", socket.id);
           setIsConnected(true);
           
+          // Debug: log join-room payload
+          console.log('JOIN ROOM PAYLOAD', { roomId, playerName, isHost, budget: initialBudget, preferences: initialPreferences, departureCity });
           // Join room
           socket.emit("join-room", 
             { roomId, playerName, isHost, budget: initialBudget, preferences: initialPreferences, departureCity }, 

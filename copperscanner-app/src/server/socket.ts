@@ -12,6 +12,7 @@ export interface Player {
   votes: string[];
   budget: number; // NEW
   preferences: string[]; // NEW
+  departureCity?: string; // NEW
 }
 
 export interface Destination {
@@ -121,7 +122,17 @@ export const initSocketServer = (req: NextApiRequest, res: NextApiResponseServer
       console.error(`[Socket Error] ID: ${socket.id}`, err);
     });
 
-    socket.on('join-room', ({ roomId, playerName, isHost, budget, preferences }, callback) => {
+    socket.on('join-room', (payload, callback) => {
+      console.log('[BACKEND] join-room received RAW payload:', payload);
+      const { roomId, playerName, isHost, budget, preferences, departureCity } = payload;
+      console.log('[BACKEND] join-room destructured:', { roomId, playerName, isHost, budget, preferences, departureCity });
+      // Log all player objects in the room after join
+      setTimeout(() => {
+        const room = getRoom(roomId);
+        if (room) {
+          console.log('[BACKEND] All players in room after join:', JSON.stringify(room.players, null, 2));
+        }
+      }, 1000);
       try {
         console.log(`[Join Room] Attempt: ${playerName} (${socket.id}) joining ${roomId}`);
         socket.join(roomId);
@@ -147,6 +158,7 @@ export const initSocketServer = (req: NextApiRequest, res: NextApiResponseServer
           votes: [],
           budget: typeof budget === 'number' ? budget : 0, // NEW
           preferences: Array.isArray(preferences) ? preferences : [], // NEW
+          departureCity: typeof departureCity === 'string' ? departureCity : undefined, // NEW
         };
 
         const existingPlayerIndex = room.players.findIndex((p) => p.id === socket.id);
@@ -162,6 +174,7 @@ export const initSocketServer = (req: NextApiRequest, res: NextApiResponseServer
           room.players[existingPlayerIndex].name = playerName;
           room.players[existingPlayerIndex].budget = typeof budget === 'number' ? budget : 0; // NEW
           room.players[existingPlayerIndex].preferences = Array.isArray(preferences) ? preferences : []; // NEW
+          room.players[existingPlayerIndex].departureCity = typeof departureCity === 'string' ? departureCity : undefined; // NEW
           player.isHost = room.players[existingPlayerIndex].isHost;
         }
 
@@ -282,6 +295,31 @@ export const initSocketServer = (req: NextApiRequest, res: NextApiResponseServer
         // If all players are finished, broadcast all-finished
         if (room.players.length > 0 && room.players.every(p => (p as any).minigame?.finished)) {
           io.to(roomId).emit('minigame-all-finished');
+
+          // --- NEW: Decide destination using LLM (mocked here) ---
+          // Gather all minigame results
+          const minigameResults = room.players.map(p => ({
+            id: p.id,
+            name: p.name,
+            score: (p as any).minigame?.score || 0
+          }));
+          // Gather destinations
+          const destinations = room.destinations;
+          // MOCK LLM: Pick the destination with the highest votes, break ties by lowest price
+          let chosen = null;
+          if (destinations.length > 0) {
+            const sorted = [...destinations].sort((a, b) => {
+              if (b.votes !== a.votes) return b.votes - a.votes;
+              return a.price - b.price;
+            });
+            chosen = sorted[0];
+          }
+          // You would call your LLM API here with minigameResults and destinations
+          // and get a destination back. For now, we mock it.
+          const destinationName = chosen ? `${chosen.name}, ${chosen.country}` : 'A Surprise Location';
+          setTimeout(() => {
+            io.to(roomId).emit('destination-decided', { destination: destinationName });
+          }, 2500); // Add suspense delay
         }
       } catch (error) {
         console.error(`[Minigame Score] Error: Room ${roomId}, Player ${playerId}`, error);
