@@ -174,7 +174,36 @@ The response is the same as the Flights Live Prices response object.
 
 # CULTURE API
 
+provides all the markets, locales and currencies we support in Skyscanner. You could use those in the calls to the other Travel APIs we provide to ensure correct localisation of the responses.
+
 GET https://partners.api.skyscanner.net/apiservices/v3/culture/nearestculture?ipAddress={ipAddress}
 
 `ipAddress`	The IP address of the user
+
+### `/markets`
+`curl --location --request GET 'https://partners.api.skyscanner.net/apiservices/v3/culture/markets/en-GB' \
+  --header 'x-api-key: your-api-key'`
+
+
+### `/locales`
+`curl --location --request GET 'https://partners.api.skyscanner.net/apiservices/v3/culture/locales' \
+  --header 'x-api-key: your-api-key'`
+
+
+### `/currencies`
+`curl --location --request GET 'https://partners.api.skyscanner.net/apiservices/v3/culture/currencies' \
+  --header 'x-api-key: your-api-key'`
+
+
+### `/nearestculture`
+`curl --location --request GET 'https://partners.api.skyscanner.net/apiservices/v3/culture/nearestculture?ipAddress=192.0.2.0' \ --header 'x-api-key: your-api-key'`
+
+# CARRIERS API
+
+## Response:
+
+* name -->	The legal name of the carrier
+* iata -->	The IATA code of the carrier
+* icao -->	The ICAO code of the carrier
+* displayCode -->	The code which should be used to prefix flight numbers. This field should be used as some airlines have a preferred notation for their flight codes of using ICAO instead of IATA codes (or vice versa). E.g.: EasyJet has an IATA code of U2 but displayCode of EZY, so the resulting flight number should be EZY123.
 
