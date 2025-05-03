@@ -240,33 +240,31 @@ export default function RoomPage() {
               <CardTitle>Destinations</CardTitle>
             </CardHeader>
             <CardContent>
-              {player.isHost && (
-                <div className="mb-4 space-y-2 p-3 bg-neutral-50 rounded-lg">
-                  <h3 className="font-medium">Add Destination</h3>
-                  <Input
-                    placeholder="Destination Name"
-                    value={destination.name}
-                    onChange={(e) => setDestination({...destination, name: e.target.value})}
-                    className="mb-2"
-                  />
-                  <Input
-                    placeholder="Country"
-                    value={destination.country}
-                    onChange={(e) => setDestination({...destination, country: e.target.value})}
-                    className="mb-2"
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Price"
-                    value={destination.price || ""}
-                    onChange={(e) => setDestination({...destination, price: parseInt(e.target.value) || 0})}
-                    className="mb-2"
-                  />
-                  <Button onClick={addNewDestination} className="w-full">
-                    Add Destination
-                  </Button>
-                </div>
-              )}
+              <div className="mb-4 space-y-2 p-3 bg-neutral-50 rounded-lg">
+                <h3 className="font-medium">Add Destination</h3>
+                <Input
+                  placeholder="Destination Name"
+                  value={destination.name}
+                  onChange={(e) => setDestination({...destination, name: e.target.value})}
+                  className="mb-2"
+                />
+                <Input
+                  placeholder="Country"
+                  value={destination.country}
+                  onChange={(e) => setDestination({...destination, country: e.target.value})}
+                  className="mb-2"
+                />
+                <Input
+                  type="number"
+                  placeholder="Price"
+                  value={destination.price || ""}
+                  onChange={(e) => setDestination({...destination, price: parseInt(e.target.value) || 0})}
+                  className="mb-2"
+                />
+                <Button onClick={addNewDestination} className="w-full">
+                  Add Destination
+                </Button>
+              </div>
               
               <div className="space-y-3">
                 {room.destinations.length === 0 ? (
