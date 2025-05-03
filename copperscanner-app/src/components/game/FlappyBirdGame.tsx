@@ -126,8 +126,32 @@ export const FlappyBirdGame: React.FC<FlappyBirdGameProps> = ({ onGameEnd }) => 
     return () => window.removeEventListener("keydown", handleSpace);
   });
 
+  // Touch/click handler for mobile and desktop
+  const handleGameAreaClick = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    handleFlap();
+  };
+
+  // Detect if device is touch-capable (for button size/placement)
+  const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
   return (
-    <div style={{ width: GAME_WIDTH, height: GAME_HEIGHT, position: "relative", background: "#87ceeb", overflow: "hidden", borderRadius: 12, margin: "0 auto" }}>
+    <div
+      className="flappy-bird-game-container"
+      style={{
+        width: "100%",
+        maxWidth: GAME_WIDTH,
+        aspectRatio: `${GAME_WIDTH} / ${GAME_HEIGHT}`,
+        position: "relative",
+        background: "#87ceeb",
+        overflow: "hidden",
+        borderRadius: 12,
+        margin: "0 auto",
+        touchAction: "manipulation",
+      }}
+      onClick={handleGameAreaClick}
+      onTouchStart={handleGameAreaClick}
+    >
       {/* Countdown overlay */}
       {countdown > 0 && (
         <div style={{
@@ -196,6 +220,33 @@ export const FlappyBirdGame: React.FC<FlappyBirdGameProps> = ({ onGameEnd }) => 
       <div style={{ position: "absolute", top: 16, left: 16, fontSize: 24, color: "#fff", textShadow: "1px 1px 2px #333" }}>
         {score}
       </div>
+      {/* Flap button for mobile/touch devices and desktop */}
+      {isRunning && countdown === 0 && !hasPlayed && (
+        <button
+          onClick={(e) => { e.stopPropagation(); handleFlap(); }}
+          onTouchStart={(e) => { e.stopPropagation(); handleFlap(); }}
+          style={{
+            position: "absolute",
+            bottom: 24,
+            left: "50%",
+            transform: "translateX(-50%)",
+            padding: isTouchDevice ? "20px 48px" : "12px 32px",
+            fontSize: isTouchDevice ? 28 : 20,
+            borderRadius: 16,
+            border: "none",
+            background: "#ff9800",
+            color: "#fff",
+            fontWeight: 700,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+            zIndex: 20,
+            opacity: 0.95,
+            cursor: "pointer",
+            userSelect: "none",
+          }}
+        >
+          Flap
+        </button>
+      )}
       {/* Overlay when game ends */}
       {!isRunning && hasPlayed && (
         <div style={{
