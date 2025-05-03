@@ -22,6 +22,7 @@ export default function RoomPage() {
   const isHost = searchParams.get("host") === "true";
   const initialBudget = Number(searchParams.get("budget")) || 0;
   const initialPreferences = (searchParams.get("preferences") || "").split(",").filter(Boolean);
+  const departureCity = searchParams.get("departureCity") || "";
 
   const [message, setMessage] = useState("");
   const [destination, setDestination] = useState({ name: "", country: "", price: 0 });
@@ -72,7 +73,7 @@ export default function RoomPage() {
           
           // Join room
           socket.emit("join-room", 
-            { roomId, playerName, isHost, budget: initialBudget, preferences: initialPreferences }, 
+            { roomId, playerName, isHost, budget: initialBudget, preferences: initialPreferences, departureCity }, 
             (response: any) => {
               if (!mounted) return;
               
@@ -236,12 +237,6 @@ export default function RoomPage() {
             <Badge>{isConnected ? "Connected" : "Disconnected"}</Badge>
             <Badge variant="secondary">{player.isHost ? "Host" : "Guest"}</Badge>
           </div>
-          {/* Budget & Preferences Section (read-only) */}
-          <div className="mt-4 p-4 bg-white rounded-lg border max-w-md">
-            <h2 className="font-semibold mb-2">Your Preferences</h2>
-            <div className="mb-1"><span className="font-medium">Budget:</span> ${player.budget}</div>
-            <div className="mb-1"><span className="font-medium">Preferences:</span> {player.preferences?.join(", ") || "None"}</div>
-          </div>
           {player.isHost && !minigameStarted && (
             <Button className="mt-4" onClick={handleStartMinigame}>
               Start Minigame
@@ -250,7 +245,7 @@ export default function RoomPage() {
         </header>
         
         {minigameStarted ? (
-          <MinigameArea roomId={roomId} />
+          <MinigameArea roomId={roomId} onBackToLobby={() => setMinigameStarted(false)} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Players List */}
@@ -268,6 +263,7 @@ export default function RoomPage() {
                         </AvatarFallback>
                       </Avatar>
                       <span>{p.name}</span>
+                      <span className="text-xs text-neutral-500 ml-2">{p.departureCity ? `from ${p.departureCity}` : null}</span>
                       {p.isHost && <Badge variant="secondary">Host</Badge>}
                     </div>
                   ))}

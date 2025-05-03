@@ -1,23 +1,57 @@
 "use client";
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { FlappyBirdGame } from "./FlappyBirdGame";
+import { useGameStore } from "@/lib/state/game-store";
+import { getSocketInstance } from "@/lib/socket-client";
 
 interface MinigameAreaProps {
   roomId: string;
-  // Add other necessary props like player info, socket instance, etc.
+  onBackToLobby: () => void;
 }
 
-export default function MinigameArea({ roomId }: MinigameAreaProps) {
+export default function MinigameArea({ roomId, onBackToLobby }: MinigameAreaProps) {
+  const [gameStarted, setGameStarted] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [score, setScore] = useState<number | null>(null);
+  const { player } = useGameStore();
+
+  // Save score to profile (placeholder: emits to server, you can adjust as needed)
+  const saveScore = (score: number) => {
+    setScore(score);
+    setGameOver(true);
+    const socket = getSocketInstance();
+    if (player) {
+      socket.emit("minigame-score", { roomId, playerId: player.id, score });
+    }
+  };
+
+  const handleBackToLobby = () => {
+    onBackToLobby();
+  };
+
   return (
-    <Card className="w-full max-w-2xl mx-auto mt-8">
+    <Card>
       <CardHeader>
-        <CardTitle className="text-center">Minigame Time!</CardTitle>
+        <CardTitle>Flappy Bird Minigame</CardTitle>
       </CardHeader>
-      <CardContent className="text-center">
-        <p>The minigame is now in progress for room: {roomId}</p>
-        {/* Add minigame logic and UI here */}
-        <p className="mt-4 text-sm text-neutral-500">(Minigame content goes here)</p>
+      <CardContent className="flex flex-col items-center justify-center">
+        {!gameStarted ? (
+          <Button onClick={() => setGameStarted(true)} className="mt-8">Start</Button>
+        ) : !gameOver ? (
+          <FlappyBirdGame onGameEnd={saveScore} />
+        ) : (
+          <div className="flex flex-col items-center">
+            <p className="text-xl font-bold mb-2">Your Score: {score}</p>
+            <Button className="mt-4" onClick={handleBackToLobby}>
+              Back to Lobby
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

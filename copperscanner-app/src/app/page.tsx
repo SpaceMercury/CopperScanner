@@ -16,6 +16,7 @@ export default function Home() {
   const [roomId, setRoomId] = useState("");
   const [budget, setBudget] = useState("");
   const [preferences, setPreferences] = useState<string[]>([]);
+  const [departureCity, setDepartureCity] = useState("");
   const router = useRouter();
 
   const preferenceOptions = [
@@ -42,8 +43,12 @@ export default function Home() {
       toast.error("Please select at least one preference");
       return;
     }
+    if (!departureCity) {
+      toast.error("Please enter your departure city");
+      return;
+    }
     const newRoomId = uuidv4().substring(0, 8);
-    router.push(`/room/${newRoomId}?name=${encodeURIComponent(playerName)}&host=true&budget=${encodeURIComponent(budget)}&preferences=${encodeURIComponent(preferences.join(","))}`);
+    router.push(`/room/${newRoomId}?name=${encodeURIComponent(playerName)}&host=true&budget=${encodeURIComponent(budget)}&preferences=${encodeURIComponent(preferences.join(","))}&departureCity=${encodeURIComponent(departureCity)}`);
   };
 
   const handleJoinRoom = () => {
@@ -63,7 +68,11 @@ export default function Home() {
       toast.error("Please select at least one preference");
       return;
     }
-    router.push(`/room/${roomId}?name=${encodeURIComponent(playerName)}&host=false&budget=${encodeURIComponent(budget)}&preferences=${encodeURIComponent(preferences.join(","))}`);
+    if (!departureCity) {
+      toast.error("Please enter your departure city");
+      return;
+    }
+    router.push(`/room/${roomId}?name=${encodeURIComponent(playerName)}&host=false&budget=${encodeURIComponent(budget)}&preferences=${encodeURIComponent(preferences.join(","))}&departureCity=${encodeURIComponent(departureCity)}`);
   };
 
   return (
@@ -107,6 +116,17 @@ export default function Home() {
                       placeholder="Enter your budget"
                       value={budget}
                       onChange={(e) => setBudget(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="createDepartureCity" className="block text-sm font-medium mb-2">
+                      Departure City
+                    </label>
+                    <Input
+                      id="createDepartureCity"
+                      placeholder="Enter your departure city"
+                      value={departureCity}
+                      onChange={(e) => setDepartureCity(e.target.value)}
                     />
                   </div>
                   <div>
@@ -169,6 +189,17 @@ export default function Home() {
                       placeholder="Enter your budget"
                       value={budget}
                       onChange={(e) => setBudget(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="joinDepartureCity" className="block text-sm font-medium mb-2">
+                      Departure City
+                    </label>
+                    <Input
+                      id="joinDepartureCity"
+                      placeholder="Enter your departure city"
+                      value={departureCity}
+                      onChange={(e) => setDepartureCity(e.target.value)}
                     />
                   </div>
                   <div>
