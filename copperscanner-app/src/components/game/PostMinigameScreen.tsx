@@ -6,9 +6,10 @@ import { useGameStore } from "@/lib/state/game-store";
 
 interface PostMinigameScreenProps {
   roomId: string;
+  onContinue?: () => void;
 }
 
-const PostMinigameScreen: React.FC<PostMinigameScreenProps> = ({ roomId }) => {
+const PostMinigameScreen: React.FC<PostMinigameScreenProps> = ({ roomId, onContinue }) => {
   const { room, player } = useGameStore();
   const [finishedPlayers, setFinishedPlayers] = useState<{ id: string; name: string }[]>([]);
   const [allFinished, setAllFinished] = useState(false);
@@ -30,6 +31,16 @@ const PostMinigameScreen: React.FC<PostMinigameScreenProps> = ({ roomId }) => {
       socket.off("minigame-all-finished", handleAllFinished);
     };
   }, []);
+
+  // Auto-advance when all players are finished
+  useEffect(() => {
+    if (allFinished && onContinue) {
+      const timeout = setTimeout(() => {
+        onContinue();
+      }, 1200); // 1.2s delay for UX
+      return () => clearTimeout(timeout);
+    }
+  }, [allFinished, onContinue]);
 
   const totalPlayers = room?.players.length || 1;
   const finishedCount = finishedPlayers.length;

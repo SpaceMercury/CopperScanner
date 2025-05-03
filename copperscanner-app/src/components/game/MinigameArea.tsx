@@ -20,6 +20,7 @@ export default function MinigameArea({ roomId, onBackToLobby }: MinigameAreaProp
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState<number | null>(null);
   const [showPostMinigame, setShowPostMinigame] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const { player } = useGameStore();
 
   // Save score to profile (placeholder: emits to server, you can adjust as needed)
@@ -39,8 +40,11 @@ export default function MinigameArea({ roomId, onBackToLobby }: MinigameAreaProp
         <CardTitle>Flappy Bird Minigame</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center justify-center">
-        {showPostMinigame ? (
-          <PostMinigameScreen roomId={roomId} />
+        {showResults ? (
+          // Replace with your GameResultsScreen and pass needed props
+          <div>Game Results Screen Placeholder</div>
+        ) : showPostMinigame ? (
+          <PostMinigameScreen roomId={roomId} onContinue={() => setShowResults(true)} />
         ) : !gameStarted ? (
           <Button onClick={() => setGameStarted(true)} className="mt-8">Start</Button>
         ) : !gameOver ? (
