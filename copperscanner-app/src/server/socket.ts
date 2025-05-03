@@ -267,6 +267,27 @@ export const initSocketServer = (req: NextApiRequest, res: NextApiResponseServer
       }
     });
 
+    // Minigame score event
+    socket.on('minigame-score', ({ roomId, playerId, score }) => {
+      try {
+        const room = getRoom(roomId);
+        if (!room) return;
+        const player = room.players.find((p) => p.id === playerId);
+        if (!player) return;
+        // Attach minigame status to player
+        (player as any).minigame = { finished: true, score };
+        // Broadcast progress
+        const finishedPlayers = room.players.filter(p => (p as any).minigame?.finished).map(p => ({ id: p.id, name: p.name }));
+        io.to(roomId).emit('minigame-progress', { finishedPlayers });
+        // If all players are finished, broadcast all-finished
+        if (room.players.length > 0 && room.players.every(p => (p as any).minigame?.finished)) {
+          io.to(roomId).emit('minigame-all-finished');
+        }
+      } catch (error) {
+        console.error(`[Minigame Score] Error: Room ${roomId}, Player ${playerId}`, error);
+      }
+    });
+
     // MODIFIED: Added reason parameter and logging
     socket.on('disconnect', (reason) => {
       console.log(`[Disconnect Event] Socket disconnecting: ${socket.id}, Reason: ${reason}`);
