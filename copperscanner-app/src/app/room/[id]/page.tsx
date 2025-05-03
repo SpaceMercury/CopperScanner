@@ -20,12 +20,25 @@ export default function RoomPage() {
   const roomId = params.id as string;
   const playerName = searchParams.get("name") || "Guest";
   const isHost = searchParams.get("host") === "true";
-  
+  const initialBudget = Number(searchParams.get("budget")) || 0;
+  const initialPreferences = (searchParams.get("preferences") || "").split(",").filter(Boolean);
+
   const [message, setMessage] = useState("");
   const [destination, setDestination] = useState({ name: "", country: "", price: 0 });
   const [connecting, setConnecting] = useState(true);
   const [minigameStarted, setMinigameStarted] = useState(false);
-  
+
+  const preferenceOptions = [
+    "Beach",
+    "Mountains",
+    "City",
+    "Adventure",
+    "Culture",
+    "Relaxation",
+    "Nightlife",
+    "Nature",
+  ];
+
   const { 
     player, 
     room, 
@@ -59,7 +72,7 @@ export default function RoomPage() {
           
           // Join room
           socket.emit("join-room", 
-            { roomId, playerName, isHost }, 
+            { roomId, playerName, isHost, budget: initialBudget, preferences: initialPreferences }, 
             (response: any) => {
               if (!mounted) return;
               
@@ -153,9 +166,10 @@ export default function RoomPage() {
         socket.off("connect_error");
         socket.off("disconnect");
       }
-      reset();
+      setTimeout(() => reset(), 0);
+
     };
-  }, [roomId, playerName, isHost]);
+  }, []);
 
   const sendMessage = () => {
     if (!message.trim() || !player) return;
@@ -221,6 +235,12 @@ export default function RoomPage() {
             <Badge variant="outline">Room ID: {roomId}</Badge>
             <Badge>{isConnected ? "Connected" : "Disconnected"}</Badge>
             <Badge variant="secondary">{player.isHost ? "Host" : "Guest"}</Badge>
+          </div>
+          {/* Budget & Preferences Section (read-only) */}
+          <div className="mt-4 p-4 bg-white rounded-lg border max-w-md">
+            <h2 className="font-semibold mb-2">Your Preferences</h2>
+            <div className="mb-1"><span className="font-medium">Budget:</span> ${player.budget}</div>
+            <div className="mb-1"><span className="font-medium">Preferences:</span> {player.preferences?.join(", ") || "None"}</div>
           </div>
           {player.isHost && !minigameStarted && (
             <Button className="mt-4" onClick={handleStartMinigame}>

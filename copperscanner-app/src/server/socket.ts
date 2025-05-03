@@ -10,6 +10,8 @@ export interface Player {
   name: string;
   isHost: boolean;
   votes: string[];
+  budget: number; // NEW
+  preferences: string[]; // NEW
 }
 
 export interface Destination {
@@ -119,7 +121,7 @@ export const initSocketServer = (req: NextApiRequest, res: NextApiResponseServer
       console.error(`[Socket Error] ID: ${socket.id}`, err);
     });
 
-    socket.on('join-room', ({ roomId, playerName, isHost }, callback) => {
+    socket.on('join-room', ({ roomId, playerName, isHost, budget, preferences }, callback) => {
       try {
         console.log(`[Join Room] Attempt: ${playerName} (${socket.id}) joining ${roomId}`);
         socket.join(roomId);
@@ -143,6 +145,8 @@ export const initSocketServer = (req: NextApiRequest, res: NextApiResponseServer
           name: playerName,
           isHost: isJoiningPlayerHost,
           votes: [],
+          budget: typeof budget === 'number' ? budget : 0, // NEW
+          preferences: Array.isArray(preferences) ? preferences : [], // NEW
         };
 
         const existingPlayerIndex = room.players.findIndex((p) => p.id === socket.id);
@@ -156,6 +160,8 @@ export const initSocketServer = (req: NextApiRequest, res: NextApiResponseServer
         } else {
           console.log(`[Player Rejoined/Exists] ${playerName} (${socket.id}) in room ${roomId}. Updating details.`);
           room.players[existingPlayerIndex].name = playerName;
+          room.players[existingPlayerIndex].budget = typeof budget === 'number' ? budget : 0; // NEW
+          room.players[existingPlayerIndex].preferences = Array.isArray(preferences) ? preferences : []; // NEW
           player.isHost = room.players[existingPlayerIndex].isHost;
         }
 

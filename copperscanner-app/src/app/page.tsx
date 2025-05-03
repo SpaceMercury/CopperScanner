@@ -14,16 +14,36 @@ import { useRouter } from "next/navigation";
 export default function Home() {
   const [playerName, setPlayerName] = useState("");
   const [roomId, setRoomId] = useState("");
+  const [budget, setBudget] = useState("");
+  const [preferences, setPreferences] = useState<string[]>([]);
   const router = useRouter();
+
+  const preferenceOptions = [
+    "Beach",
+    "Mountains",
+    "City",
+    "Adventure",
+    "Culture",
+    "Relaxation",
+    "Nightlife",
+    "Nature",
+  ];
 
   const handleCreateRoom = () => {
     if (!playerName) {
       toast.error("Please enter your name");
       return;
     }
-
+    if (!budget || isNaN(Number(budget)) || Number(budget) <= 0) {
+      toast.error("Please enter a valid budget");
+      return;
+    }
+    if (preferences.length === 0) {
+      toast.error("Please select at least one preference");
+      return;
+    }
     const newRoomId = uuidv4().substring(0, 8);
-    router.push(`/room/${newRoomId}?name=${encodeURIComponent(playerName)}&host=true`);
+    router.push(`/room/${newRoomId}?name=${encodeURIComponent(playerName)}&host=true&budget=${encodeURIComponent(budget)}&preferences=${encodeURIComponent(preferences.join(","))}`);
   };
 
   const handleJoinRoom = () => {
@@ -31,13 +51,19 @@ export default function Home() {
       toast.error("Please enter your name");
       return;
     }
-
     if (!roomId) {
       toast.error("Please enter a room ID");
       return;
     }
-
-    router.push(`/room/${roomId}?name=${encodeURIComponent(playerName)}&host=false`);
+    if (!budget || isNaN(Number(budget)) || Number(budget) <= 0) {
+      toast.error("Please enter a valid budget");
+      return;
+    }
+    if (preferences.length === 0) {
+      toast.error("Please select at least one preference");
+      return;
+    }
+    router.push(`/room/${roomId}?name=${encodeURIComponent(playerName)}&host=false&budget=${encodeURIComponent(budget)}&preferences=${encodeURIComponent(preferences.join(","))}`);
   };
 
   return (
@@ -70,6 +96,38 @@ export default function Home() {
                       onChange={(e) => setPlayerName(e.target.value)}
                     />
                   </div>
+                  <div>
+                    <label htmlFor="createBudget" className="block text-sm font-medium mb-2">
+                      Budget ($)
+                    </label>
+                    <Input
+                      id="createBudget"
+                      type="number"
+                      min="1"
+                      placeholder="Enter your budget"
+                      value={budget}
+                      onChange={(e) => setBudget(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Preferences</label>
+                    <div className="grid grid-cols-2 gap-2 mb-1">
+                      {preferenceOptions.map(opt => (
+                        <button
+                          type="button"
+                          key={opt}
+                          className={`border rounded-md px-3 py-2 text-sm transition-colors ${preferences.includes(opt) ? 'bg-primary text-primary-foreground border-primary' : 'bg-white text-neutral-700 border-neutral-300'} focus:outline-none focus:ring-2 focus:ring-primary`}
+                          onClick={() => {
+                            setPreferences(prev => prev.includes(opt) ? prev.filter(p => p !== opt) : [...prev, opt]);
+                          }}
+                          aria-pressed={preferences.includes(opt)}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-neutral-500 mt-1">Select one or more</p>
+                  </div>
                   <Button className="w-full" onClick={handleCreateRoom}>
                     Create New Room
                   </Button>
@@ -99,6 +157,38 @@ export default function Home() {
                       value={roomId}
                       onChange={(e) => setRoomId(e.target.value)}
                     />
+                  </div>
+                  <div>
+                    <label htmlFor="joinBudget" className="block text-sm font-medium mb-2">
+                      Budget ($)
+                    </label>
+                    <Input
+                      id="joinBudget"
+                      type="number"
+                      min="1"
+                      placeholder="Enter your budget"
+                      value={budget}
+                      onChange={(e) => setBudget(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Preferences</label>
+                    <div className="grid grid-cols-2 gap-2 mb-1">
+                      {preferenceOptions.map(opt => (
+                        <button
+                          type="button"
+                          key={opt}
+                          className={`border rounded-md px-3 py-2 text-sm transition-colors ${preferences.includes(opt) ? 'bg-primary text-primary-foreground border-primary' : 'bg-white text-neutral-700 border-neutral-300'} focus:outline-none focus:ring-2 focus:ring-primary`}
+                          onClick={() => {
+                            setPreferences(prev => prev.includes(opt) ? prev.filter(p => p !== opt) : [...prev, opt]);
+                          }}
+                          aria-pressed={preferences.includes(opt)}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-neutral-500 mt-1">Select one or more</p>
                   </div>
                   <Button className="w-full" onClick={handleJoinRoom}>
                     Join Room
