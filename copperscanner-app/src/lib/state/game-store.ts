@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Destination, Player, Room, ChatMessage } from '@/server/socket';
+import { Player, Room, ChatMessage } from '@/server/socket';
 
 interface GameState {
   // Player info

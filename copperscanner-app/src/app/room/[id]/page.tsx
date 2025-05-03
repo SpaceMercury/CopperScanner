@@ -29,17 +29,6 @@ export default function RoomPage() {
   const [connecting, setConnecting] = useState(true);
   const [minigameStarted, setMinigameStarted] = useState(false);
 
-  const preferenceOptions = [
-    "Beach",
-    "Mountains",
-    "City",
-    "Adventure",
-    "Culture",
-    "Relaxation",
-    "Nightlife",
-    "Nature",
-  ];
-
   const { 
     player, 
     room, 
@@ -56,7 +45,7 @@ export default function RoomPage() {
 
   useEffect(() => {
     let mounted = true;
-    let socket: any;
+    let socket: unknown;
     
     const setupSocket = async () => {
       setConnecting(true);
@@ -65,73 +54,73 @@ export default function RoomPage() {
         socket = getSocketInstance();
         
         // Set up event handlers
-        socket.on("connect", () => {
+        (socket as unknown).on("connect", () => {
           if (!mounted) return;
           
-          console.log("Connected to socket server with ID:", socket.id);
+          console.log("Connected to socket server with ID:", (socket as any).id);
           setIsConnected(true);
           
           // Join room
-          socket.emit("join-room", 
+          (socket as unknown).emit("join-room", 
             { roomId, playerName, isHost, budget: initialBudget, preferences: initialPreferences, departureCity }, 
-            (response: any) => {
+            (response: unknown) => {
               if (!mounted) return;
               
-              if (response?.success) {
-                setPlayer(response.player);
-                setRoom(response.room);
-                setMessages(response.messages || []);
+              if ((response as any)?.success) {
+                setPlayer((response as any).player);
+                setRoom((response as any).room);
+                setMessages((response as any).messages || []);
                 toast.success(`Joined room: ${roomId}`);
               } else {
-                toast.error(response?.error || "Failed to join room");
+                toast.error((response as any)?.error || "Failed to join room");
               }
               setConnecting(false);
             }
           );
         });
 
-        socket.on("room-update", (updatedRoom: any) => {
+        (socket as unknown).on("room-update", (updatedRoom: unknown) => {
           if (!mounted) return;
-          setRoom(updatedRoom);
+          setRoom(updatedRoom as any);
         });
 
-        socket.on("player-joined", (newPlayer: any) => {
+        (socket as unknown).on("player-joined", (newPlayer: unknown) => {
           if (!mounted) return;
-          toast(`${newPlayer.name} joined the room`, {
+          toast(`${(newPlayer as any).name} joined the room`, {
             description: `${room?.players?.length || 1} players in the room`,
           });
         });
 
-        socket.on("player-left", (leftPlayer: any) => {
+        (socket as unknown).on("player-left", (leftPlayer: unknown) => {
           if (!mounted) return;
-          toast(`${leftPlayer.name} left the room`, {
+          toast(`${(leftPlayer as any).name} left the room`, {
             description: `${room?.players?.length || 0} players in the room`,
           });
         });
 
-        socket.on("new-message", (newMessage: any) => {
+        (socket as unknown).on("new-message", (newMessage: unknown) => {
           if (!mounted) return;
-          addMessage(newMessage);
+          addMessage(newMessage as any);
         });
 
-        socket.on("destination-added", (newDestination: any) => {
+        (socket as unknown).on("destination-added", (newDestination: unknown) => {
           if (!mounted) return;
-          toast(`New destination added: ${newDestination.name}`);
+          toast(`New destination added: ${(newDestination as any).name}`);
         });
 
-        socket.on("minigame-started", () => {
+        (socket as unknown).on("minigame-started", () => {
           setMinigameStarted(true);
           toast("Minigame is starting!");
         });
 
-        socket.on("connect_error", (err: any) => {
+        (socket as unknown).on("connect_error", (err: unknown) => {
           console.error("Socket connection error:", err);
           if (!mounted) return;
-          toast.error("Connection error: " + err.message);
+          toast.error("Connection error: " + (err as any).message);
           setConnecting(false);
         });
 
-        socket.on("disconnect", () => {
+        (socket as unknown).on("disconnect", () => {
           console.log("Disconnected from socket server");
           if (!mounted) return;
           setIsConnected(false);
@@ -139,8 +128,8 @@ export default function RoomPage() {
         });
         
         // Connect if not already connected
-        if (!socket.connected) {
-          socket.connect();
+        if (!(socket as any).connected) {
+          (socket as unknown).connect();
         }
       } catch (error) {
         console.error("Error setting up socket:", error);
@@ -157,26 +146,26 @@ export default function RoomPage() {
     return () => {
       mounted = false;
       if (socket) {
-        socket.off("connect");
-        socket.off("room-update");
-        socket.off("player-joined");
-        socket.off("player-left");
-        socket.off("new-message");
-        socket.off("destination-added");
-        socket.off("minigame-started");
-        socket.off("connect_error");
-        socket.off("disconnect");
+        (socket as unknown).off("connect");
+        (socket as unknown).off("room-update");
+        (socket as unknown).off("player-joined");
+        (socket as unknown).off("player-left");
+        (socket as unknown).off("new-message");
+        (socket as unknown).off("destination-added");
+        (socket as unknown).off("minigame-started");
+        (socket as unknown).off("connect_error");
+        (socket as unknown).off("disconnect");
       }
       setTimeout(() => reset(), 0);
 
     };
-  }, []);
+  }, [roomId, playerName, isHost, initialBudget, initialPreferences, departureCity, setIsConnected, setPlayer, setRoom, setMessages, addMessage, reset]);
 
   const sendMessage = () => {
     if (!message.trim() || !player) return;
     
     const socket = getSocketInstance();
-    socket.emit("send-message", {
+    (socket as unknown).emit("send-message", {
       roomId,
       playerId: player.id,
       playerName: player.name,
@@ -190,7 +179,7 @@ export default function RoomPage() {
     if (!destination.name || !destination.country || !player) return;
     
     const socket = getSocketInstance();
-    socket.emit("add-destination", {
+    (socket as unknown).emit("add-destination", {
       roomId,
       destination,
     });
@@ -203,7 +192,7 @@ export default function RoomPage() {
     if (!player) return;
     
     const socket = getSocketInstance();
-    socket.emit("vote", {
+    (socket as unknown).emit("vote", {
       roomId,
       playerId: player.id,
       destinationId,
@@ -215,7 +204,7 @@ export default function RoomPage() {
 
   const handleStartMinigame = () => {
     const socket = getSocketInstance();
-    socket.emit("start-minigame", { roomId });
+    (socket as unknown).emit("start-minigame", { roomId });
   };
 
   if (!player || !room || connecting) {

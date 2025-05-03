@@ -1,4 +1,3 @@
-import { Server as NetServer } from 'net';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { Server as SocketIOServer } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
@@ -275,12 +274,12 @@ export const initSocketServer = (req: NextApiRequest, res: NextApiResponseServer
         const player = room.players.find((p) => p.id === playerId);
         if (!player) return;
         // Attach minigame status to player
-        (player as any).minigame = { finished: true, score };
+        (player as unknown).minigame = { finished: true, score };
         // Broadcast progress
-        const finishedPlayers = room.players.filter(p => (p as any).minigame?.finished).map(p => ({ id: p.id, name: p.name }));
+        const finishedPlayers = room.players.filter(p => (p as unknown).minigame?.finished).map(p => ({ id: p.id, name: p.name }));
         io.to(roomId).emit('minigame-progress', { finishedPlayers });
         // If all players are finished, broadcast all-finished
-        if (room.players.length > 0 && room.players.every(p => (p as any).minigame?.finished)) {
+        if (room.players.length > 0 && room.players.every(p => (p as unknown).minigame?.finished)) {
           io.to(roomId).emit('minigame-all-finished');
         }
       } catch (error) {

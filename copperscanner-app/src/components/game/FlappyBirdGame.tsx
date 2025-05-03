@@ -15,7 +15,6 @@ const PIPE_WIDTH = 60;
 const PIPE_GAP = 160;
 const INITIAL_PIPE_SPEED = 2;
 const SPEED_INCREMENT = 0.15; // How much to increase speed per point
-const MIN_PIPE_GAP = 100;
 
 function getRandomPipeY() {
   return Math.floor(Math.random() * (GAME_HEIGHT - PIPE_GAP - 100)) + 50;
@@ -65,7 +64,7 @@ export const FlappyBirdGame: React.FC<FlappyBirdGameProps> = ({ onGameEnd }) => 
         setBirdY((prev) => Math.max(0, prev + velocity));
         setVelocity((v) => v + GRAVITY);
         setPipes((prevPipes) => {
-          let newPipes = prevPipes.map((pipe) => ({ ...pipe, x: pipe.x - pipeSpeed }));
+          const newPipes = prevPipes.map((pipe) => ({ ...pipe, x: pipe.x - pipeSpeed }));
           // Only add one pipe at a time
           if (newPipes[newPipes.length - 1].x < GAME_WIDTH - 200) {
             newPipes.push({ x: GAME_WIDTH, y: getRandomPipeY() });

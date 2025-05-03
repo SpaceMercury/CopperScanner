@@ -1,10 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { FlappyBirdGame } from "./FlappyBirdGame";
 import { useGameStore } from "@/lib/state/game-store";
 import { getSocketInstance } from "@/lib/socket-client";
@@ -12,10 +10,9 @@ import PostMinigameScreen from "./PostMinigameScreen";
 
 interface MinigameAreaProps {
   roomId: string;
-  onBackToLobby: () => void;
 }
 
-export default function MinigameArea({ roomId, onBackToLobby }: MinigameAreaProps) {
+export default function MinigameArea({ roomId }: MinigameAreaProps) {
   const [gameStarted, setGameStarted] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState<number | null>(null);

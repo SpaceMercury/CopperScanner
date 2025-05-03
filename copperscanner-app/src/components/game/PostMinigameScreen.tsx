@@ -10,7 +10,7 @@ interface PostMinigameScreenProps {
 }
 
 const PostMinigameScreen: React.FC<PostMinigameScreenProps> = ({ roomId, onContinue }) => {
-  const { room, player } = useGameStore();
+  const { room } = useGameStore();
   const [finishedPlayers, setFinishedPlayers] = useState<{ id: string; name: string }[]>([]);
   const [allFinished, setAllFinished] = useState(false);
 

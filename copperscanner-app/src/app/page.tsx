@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { v4 as uuidv4 } from "uuid";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
