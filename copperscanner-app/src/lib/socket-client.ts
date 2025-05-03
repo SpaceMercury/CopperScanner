@@ -22,12 +22,14 @@ export const getSocketInstance = (): Socket => {
     // Ensure this runs only on the client
     if (typeof window !== "undefined") {
       console.log("[Socket Client] Initializing new instance...");
-      socket = io({ // Connects to the same host/port by default
-        path: "/api/socket", // Matches server path
-        autoConnect: false, // Connect manually in component
-        reconnectionAttempts: 5, // Optional: Limit reconnection attempts
-        reconnectionDelay: 1000, // Optional: Delay between attempts
-      });
+      socket = io(
+        process.env.NEXT_PUBLIC_SOCKET_URL || "",
+        {
+          path: "/api/socket",
+          transports: ["websocket"], // Force websocket only for Render compatibility
+          withCredentials: true,
+        }
+      );
 
       // Log basic connection events for debugging
       socket.on("connect", () => {

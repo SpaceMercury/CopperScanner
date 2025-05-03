@@ -92,7 +92,11 @@ export const initSocketServer = (req: NextApiRequest, res: NextApiResponseServer
   const httpServer: HttpServerWithIO = res.socket.server;
   const io = new SocketIOServer(httpServer, {
     path: '/api/socket',
-    cors: { origin: '*', methods: ['GET', 'POST'] },
+    cors: {
+      origin: process.env.NEXT_PUBLIC_FRONTEND_ORIGIN || "*",
+      methods: ["GET", "POST"],
+      credentials: true,
+    },
   });
 
   res.socket.server.io = io;
