@@ -76,8 +76,19 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gradient-to-br from-neutral-100 to-neutral-200">
-      <div className="max-w-md w-full">
+    <main className="relative flex min-h-screen flex-col items-center justify-center p-4 bg-gradient-to-br from-neutral-100 to-neutral-200 overflow-hidden">
+      {/* Animated background layer */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 w-full h-full"
+        style={{
+          background: 'url("/cocodrilo.gif") center center / cover no-repeat',
+          opacity: 0.35,
+          
+        }}
+      />
+      {/* Main content layer */}
+      <div className="relative z-10 max-w-md w-full">
         <Card className="shadow-lg border-neutral-200">
           <CardHeader>
             <CardTitle className="text-3xl font-bold text-center">CopperScanner</CardTitle>
@@ -234,6 +245,12 @@ export default function Home() {
         </Card>
       </div>
       <Toaster position="bottom-center" />
+      <style jsx global>{`
+        @keyframes cloudsMove {
+          0% { background-position-x: 0; }
+          100% { background-position-x: 1000px; }
+        }
+      `}</style>
     </main>
   );
 }
