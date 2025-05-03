@@ -1,5 +1,3 @@
-# CopperScanner
-
 **CopperScanner** is a collaborative trip planning web app built with Next.js, React, and Socket.IO. Users can create or join rooms, suggest travel destinations, chat, and vote in real time.
 
 ---
@@ -93,3 +91,4 @@ npm run dev
 ## License
 
 MIT
+=======
