@@ -200,7 +200,7 @@ export default function RoomPage() {
 
   const handleStartMinigame = () => {
     const socket = getSocketInstance();
-    socket.emit("game", { roomId });
+    socket.emit("start-minigame", { roomId });
   };
 
   if (!player || !room || connecting) {
