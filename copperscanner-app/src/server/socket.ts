@@ -41,6 +41,7 @@ export interface Room {
   destinations: Destination[];
   messages: ChatMessage[];
   createdAt: Date;
+  copperMemes?: { id: string; text: string; votes: number; voters: string[] }[];
 }
 
 // Define a type for the server object expected by Socket.IO
@@ -73,6 +74,7 @@ const createRoom = (roomId: string): Room => {
     destinations: [],
     messages: [],
     createdAt: new Date(),
+    copperMemes: [],
   };
   rooms[roomId] = newRoom;
   console.log(`[Room Manager] Created new room: ${roomId}`);
@@ -323,6 +325,33 @@ export const initSocketServer = (req: NextApiRequest, res: NextApiResponseServer
         }
       } catch (error) {
         console.error(`[Minigame Score] Error: Room ${roomId}, Player ${playerId}`, error);
+      }
+    });
+
+    socket.on('add-copper-meme', ({ roomId, meme }) => {
+      const room = getRoom(roomId);
+      if (!room) return;
+      if (!room.copperMemes) room.copperMemes = [];
+      const newMeme = { id: uuidv4(), text: meme.text, votes: 0, voters: [] };
+      room.copperMemes.unshift(newMeme);
+      io.to(roomId).emit('copper-memes-update', room.copperMemes);
+    });
+
+    socket.on('vote-copper-meme', ({ roomId, memeId, voterId, delta }) => {
+      const room = getRoom(roomId);
+      if (!room || !room.copperMemes) return;
+      const meme = room.copperMemes.find(m => m.id === memeId);
+      if (meme && !meme.voters.includes(voterId)) {
+        meme.votes += delta;
+        meme.voters.push(voterId);
+        io.to(roomId).emit('copper-memes-update', room.copperMemes);
+      }
+    });
+
+    socket.on('get-copper-memes', ({ roomId }) => {
+      const room = getRoom(roomId);
+      if (room && room.copperMemes) {
+        socket.emit('copper-memes-update', room.copperMemes);
       }
     });
 

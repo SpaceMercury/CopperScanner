@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useGameStore } from "@/lib/state/game-store";
 import { getSocketInstance } from "@/lib/socket-client";
@@ -13,6 +13,14 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import MinigameArea from "@/components/game/MinigameArea";
+
+// Add this for playing sound
+const playCopperSound = () => {
+  const audio = new Audio("/copperscanner-sound.mp3");
+  audio.currentTime = 5; // start at 5 seconds
+  audio.play();
+  setTimeout(() => audio.pause(), 2000); // play for 2 seconds
+};
 
 export default function RoomPage() {
   const params = useParams();
@@ -28,6 +36,9 @@ export default function RoomPage() {
   const [destination, setDestination] = useState({ name: "", country: "", price: 0 });
   const [connecting, setConnecting] = useState(true);
   const [minigameStarted, setMinigameStarted] = useState(false);
+  const [copperMemes, setCopperMemes] = useState<{ id: string; text: string; votes: number; voters: string[] }[]>([]);
+  const [copperText, setCopperText] = useState("");
+  const memeInputRef = useRef<HTMLInputElement>(null);
 
   const preferenceOptions = [
     "Beach",
@@ -90,6 +101,8 @@ export default function RoomPage() {
               setConnecting(false);
             }
           );
+
+          socket.emit('get-copper-memes', { roomId });
         });
 
         socket.on("room-update", (updatedRoom: any) => {
@@ -124,6 +137,11 @@ export default function RoomPage() {
         socket.on("minigame-started", () => {
           setMinigameStarted(true);
           toast("Minigame is starting!");
+        });
+
+        socket.on('copper-memes-update', (memes) => {
+          if (!mounted) return;
+          setCopperMemes(memes);
         });
 
         socket.on("connect_error", (err: any) => {
@@ -166,6 +184,7 @@ export default function RoomPage() {
         socket.off("new-message");
         socket.off("destination-added");
         socket.off("minigame-started");
+        socket.off("copper-memes-update");
         socket.off("connect_error");
         socket.off("disconnect");
       }
@@ -173,6 +192,14 @@ export default function RoomPage() {
 
     };
   }, []);
+
+  useEffect(() => {
+    // Play sound if any meme reaches 2 votes
+    const memeWithEnoughVotes = copperMemes.find(meme => meme.votes === 2);
+    if (memeWithEnoughVotes) {
+      playCopperSound();
+    }
+  }, [copperMemes]);
 
   const sendMessage = () => {
     if (!message.trim() || !player) return;
@@ -220,6 +247,27 @@ export default function RoomPage() {
     socket.emit("start-minigame", { roomId });
   };
 
+  const handleAddCopper = () => {
+    if (!copperText.trim()) return;
+    const socket = getSocketInstance();
+    socket.emit('add-copper-meme', {
+      roomId,
+      meme: { text: copperText.trim() },
+    });
+    setCopperText('');
+    memeInputRef.current?.focus();
+  };
+
+  const handleVoteCopper = (id: string, voterId: string, delta: number) => {
+    const socket = getSocketInstance();
+    socket.emit('vote-copper-meme', {
+      roomId,
+      memeId: id,
+      voterId,
+      delta,
+    });
+  };
+
   if (!player || !room || connecting) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -230,8 +278,17 @@ export default function RoomPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-100 p-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-neutral-100 p-4 relative overflow-hidden">
+      {/* Animated background layer */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 w-full h-full"
+        style={{
+          background: 'url("/background.avif") center center / cover no-repeat',
+          opacity: 0.35,
+        }}
+      />
+      <div className="max-w-6xl mx-auto relative z-10">
         <header className="mb-6">
           <h1 className="text-3xl font-bold">Trip Planning Room</h1>
           <div className="flex items-center gap-2 mt-2">
@@ -272,72 +329,6 @@ export default function RoomPage() {
                 </div>
               </CardContent>
             </Card>
-            
-            {/* Destinations */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Destinations</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-4 space-y-2 p-3 bg-neutral-50 rounded-lg">
-                  <h3 className="font-medium">Add Destination</h3>
-                  <Input
-                    placeholder="Destination Name"
-                    value={destination.name}
-                    onChange={(e) => setDestination({...destination, name: e.target.value})}
-                    className="mb-2"
-                  />
-                  <Input
-                    placeholder="Country"
-                    value={destination.country}
-                    onChange={(e) => setDestination({...destination, country: e.target.value})}
-                    className="mb-2"
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Price"
-                    value={destination.price || ""}
-                    onChange={(e) => setDestination({...destination, price: parseInt(e.target.value) || 0})}
-                    className="mb-2"
-                  />
-                  <Button onClick={addNewDestination} className="w-full">
-                    Add Destination
-                  </Button>
-                </div>
-                
-                <div className="space-y-3">
-                  {room.destinations.length === 0 ? (
-                    <p className="text-sm text-neutral-500">No destinations yet.</p>
-                  ) : (
-                    room.destinations.map((dest) => (
-                      <Card key={dest.id} className="overflow-hidden border-neutral-200">
-                        <div className="p-3">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-medium">{dest.name}</h3>
-                              <p className="text-sm text-neutral-500">{dest.country}</p>
-                            </div>
-                            <Badge variant="outline">${dest.price}</Badge>
-                          </div>
-                          <div className="mt-3 flex justify-between items-center">
-                            <span className="text-sm">{dest.votes} votes</span>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              disabled={player.votes.includes(dest.id)}
-                              onClick={() => handleVote(dest.id)}
-                            >
-                              {player.votes.includes(dest.id) ? "Voted" : "Vote"}
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-            
             {/* Chat */}
             <Card>
               <CardHeader>
@@ -360,7 +351,6 @@ export default function RoomPage() {
                     ))
                   )}
                 </div>
-                
                 <div className="flex gap-2">
                   <Input
                     placeholder="Type a message..."
@@ -369,6 +359,50 @@ export default function RoomPage() {
                     onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                   />
                   <Button onClick={sendMessage}>Send</Button>
+                </div>
+              </CardContent>
+            </Card>
+            {/* Copper Meme Card */}
+            <Card className="bg-yellow-50 border-yellow-300">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  🏺 Copper Quality Board
+                </CardTitle>
+                <p className="text-xs text-neutral-600 mt-1">Add your copper (meme/joke) in honor of Ea-Nasir. Vote on the quality!</p>
+                <p className="text-xs text-yellow-700 mt-2 flex items-center gap-1">
+                  <span className="font-bold">*</span> The one with the best copper will have a bigger impact on getting their trip chosen!
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2 mb-3">
+                  <Input
+                    ref={memeInputRef}
+                    placeholder="Add your copper..."
+                    value={copperText}
+                    onChange={e => setCopperText(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleAddCopper()}
+                  />
+                  <Button onClick={handleAddCopper} variant="secondary">Add</Button>
+                </div>
+                <div className="space-y-3">
+                  {copperMemes.length === 0 ? (
+                    <div className="text-xs text-neutral-500">No copper yet. Be the first to add!</div>
+                  ) : (
+                    copperMemes.map(meme => (
+                      <div key={meme.id} className="border rounded p-2 bg-white flex flex-col gap-1">
+                        <span className="text-sm">{meme.text}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Button size="sm" variant="outline" onClick={() => handleVoteCopper(meme.id, player.id, 1)} disabled={meme.voters.includes(player.id)}>
+                            Good Copper
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleVoteCopper(meme.id, player.id, -1)} disabled={meme.voters.includes(player.id)}>
+                            Bad Copper
+                          </Button>
+                          <span className="text-xs ml-2">Quality: <b>{meme.votes}</b></span>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
