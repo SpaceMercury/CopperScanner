@@ -101,11 +101,19 @@ export const initSocketServer = (req: NextApiRequest, res: NextApiResponseServer
     console.error('[Socket Engine Error]');
     console.error('  Code:', err.code);
     console.error('  Message:', err.message);
-    console.error('  Context:', err.context);
+    // Log context if available (it might be undefined)
+    if (err.context) {
+      console.error('  Context:', err.context);
+    }
+    // Log the full error object for more details
+    console.error('  Full Error Object:', err);
   });
 
   io.on('connection', (socket) => {
-    console.log(`[Socket Connected] ID: ${socket.id}`);
+    // ADDED: Log immediately upon connection event
+    console.log(`[Connection Event] Socket connected: ${socket.id}, Transport: ${socket.conn.transport.name}`);
+
+    console.log(`[Socket Connected] ID: ${socket.id}`); // Keep original log too
 
     socket.on('error', (err) => {
       console.error(`[Socket Error] ID: ${socket.id}`, err);
@@ -152,6 +160,8 @@ export const initSocketServer = (req: NextApiRequest, res: NextApiResponseServer
         }
 
         socket.to(roomId).emit('player-joined', player);
+        // Emit updated room state to all clients in the room (including host)
+        io.to(roomId).emit('room-update', room);
 
         console.log(`[Join Room] Success: Sending room state to ${playerName} (${socket.id})`);
         if (callback) callback({ success: true, player, room, messages: room.messages });
@@ -235,8 +245,26 @@ export const initSocketServer = (req: NextApiRequest, res: NextApiResponseServer
       }
     });
 
-    socket.on('disconnect', () => {
-      console.log(`[Socket Disconnected] ID: ${socket.id}`);
+    // Start Minigame event
+    socket.on('start-minigame', ({ roomId }) => {
+      try {
+        const room = getRoom(roomId);
+        if (!room) {
+          console.warn(`[Start Minigame] Room not found: ${roomId}`);
+          return;
+        }
+        // Broadcast to all clients in the room
+        io.to(roomId).emit('minigame-started');
+        console.log(`[Minigame Started] Room: ${roomId}`);
+      } catch (error) {
+        console.error(`[Start Minigame] Error: Room ${roomId}`, error);
+      }
+    });
+
+    // MODIFIED: Added reason parameter and logging
+    socket.on('disconnect', (reason) => {
+      console.log(`[Disconnect Event] Socket disconnecting: ${socket.id}, Reason: ${reason}`);
+      console.log(`[Socket Disconnected] ID: ${socket.id}`); // Keep original log too
       let roomIdToRemoveFrom: string | null = null;
       let playerToRemove: Player | null = null;
 
