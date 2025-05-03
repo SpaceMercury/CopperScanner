@@ -17,9 +17,18 @@ import MinigameArea from "@/components/game/MinigameArea";
 // Add this for playing sound
 const playCopperSound = () => {
   const audio = new Audio("/copperscanner-sound.mp3");
-  audio.currentTime = 5; // start at 5 seconds
-  audio.play();
-  setTimeout(() => audio.pause(), 2000); // play for 2 seconds
+  audio.currentTime = 50;
+
+  audio.play().catch((e) => {
+    console.error("Audio play error:", e);
+    
+  })
+  setTimeout(() => audio.pause(), 20000);
+  ;};
+
+const playVoteSound = () => {
+  const audio = new Audio("/vote-sound.mp3");
+  audio.play().catch(() => {});
 };
 
 export default function RoomPage() {
@@ -38,6 +47,7 @@ export default function RoomPage() {
   const [minigameStarted, setMinigameStarted] = useState(false);
   const [copperMemes, setCopperMemes] = useState<{ id: string; text: string; votes: number; voters: string[] }[]>([]);
   const [copperText, setCopperText] = useState("");
+  const [copperSoundPlayedIds, setCopperSoundPlayedIds] = useState<string[]>([]);
   const memeInputRef = useRef<HTMLInputElement>(null);
 
   const preferenceOptions = [
@@ -194,12 +204,14 @@ export default function RoomPage() {
   }, []);
 
   useEffect(() => {
-    // Play sound if any meme reaches 2 votes
-    const memeWithEnoughVotes = copperMemes.find(meme => meme.votes === 2);
-    if (memeWithEnoughVotes) {
-      playCopperSound();
-    }
-  }, [copperMemes]);
+    // Play sound only the first time a meme reaches 2 votes
+    copperMemes.forEach(meme => {
+      if (meme.votes === 2 && !copperSoundPlayedIds.includes(meme.id)) {
+        playCopperSound();
+        setCopperSoundPlayedIds(prev => [...prev, meme.id]);
+      }
+    });
+  }, [copperMemes, copperSoundPlayedIds]);
 
   const sendMessage = () => {
     if (!message.trim() || !player) return;
@@ -266,6 +278,7 @@ export default function RoomPage() {
       voterId,
       delta,
     });
+    playVoteSound();
   };
 
   if (!player || !room || connecting) {
@@ -390,13 +403,26 @@ export default function RoomPage() {
                   ) : (
                     copperMemes.map(meme => (
                       <div key={meme.id} className="border rounded p-2 bg-white flex flex-col gap-1">
-                        <span className="text-sm">{meme.text}</span>
+                        <span className="text-sm flex items-center gap-2">
+                          <img src="/copper-ingot.webp" alt="Copper Ingot" className="w-6 h-6 inline-block" />
+                          {meme.text}
+                        </span>
                         <div className="flex items-center gap-2 mt-1">
                           <Button size="sm" variant="outline" onClick={() => handleVoteCopper(meme.id, player.id, 1)} disabled={meme.voters.includes(player.id)}>
-                            Good Copper
+                            <span className="flex items-center gap-1">
+                              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 15V5" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M5 10L10 5L15 10" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </span>
                           </Button>
                           <Button size="sm" variant="outline" onClick={() => handleVoteCopper(meme.id, player.id, -1)} disabled={meme.voters.includes(player.id)}>
-                            Bad Copper
+                            <span className="flex items-center gap-1">
+                              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 5v10" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                <path d="M15 10L10 15L5 10" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </span>
                           </Button>
                           <span className="text-xs ml-2">Quality: <b>{meme.votes}</b></span>
                         </div>
